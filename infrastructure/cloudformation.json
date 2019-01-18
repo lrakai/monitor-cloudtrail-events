@@ -1,0 +1,293 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Monitor CloudTrail Events",
+    "Parameters": {},
+    "Mappings": {
+        "UserConfig": {
+            "Login": {
+                "Name": "student",
+                "Pass": "password"
+            }
+        }
+    },
+    "Resources": {
+        "CloudTrailRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "cloudtrail.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "RoleName": "CloudTrailRole",
+                "Path": "/"
+            }
+        },
+        "RolePolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "cloudtrail-policy",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "AWSCloudTrailCreateLogStream20141101",
+                            "Effect": "Allow",
+                            "Action": [
+                                "logs:CreateLogStream"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::Sub": "arn:aws:logs:us-west-2:${AWS::AccountId}:log-group:CloudTrail/*:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*"
+                                }
+                            ]
+                        },
+                        {
+                            "Sid": "AWSCloudTrailPutLogEvents20141101",
+                            "Effect": "Allow",
+                            "Action": [
+                                "logs:PutLogEvents"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::Sub": "arn:aws:logs:us-west-2:${AWS::AccountId}:log-group:CloudTrail/*:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "CloudTrailRole"
+                    }
+                ]
+            }
+        },
+        "Group": {
+            "Type": "AWS::IAM::Group",
+            "Properties": {
+                "GroupName": "Students",
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "students-policy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudtrail:AddTags",
+                                        "cloudtrail:CreateTrail",
+                                        "cloudtrail:DeleteTrail",
+                                        "cloudtrail:DescribeTrails",
+                                        "cloudtrail:GetEventSelectors",
+                                        "cloudtrail:GetTrailStatus",
+                                        "cloudtrail:ListPublicKeys",
+                                        "cloudtrail:ListTags",
+                                        "cloudtrail:LookupEvents",
+                                        "cloudtrail:PutEventSelectors",
+                                        "cloudtrail:RemoveTags",
+                                        "cloudtrail:StartLogging",
+                                        "cloudtrail:StopLogging",
+                                        "cloudtrail:UpdateTrail"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:CreateBucket",
+                                        "s3:GetObject",
+                                        "s3:ListAllMyBuckets",
+                                        "s3:ListBucket",
+                                        "s3:PutBucketPolicy",
+                                        "s3:PutObject",
+                                        "s3:PutObjectACL",
+                                        "s3:PutObjectTagging",
+                                        "s3:PutObjectVersionTagging",
+                                        "s3:PutObjectVersionAcl",
+                                        "s3:GetBucketLocation",
+                                        "s3:GetBucketPolicy"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": [
+                                        "cloudwatch:DeleteAlarms",
+                                        "cloudwatch:DescribeAlarmHistory",
+                                        "cloudwatch:DescribeAlarmHistory",
+                                        "cloudwatch:DescribeAlarms",
+                                        "cloudwatch:DescribeAlarmsForMetric",
+                                        "cloudwatch:DisableAlarmActions",
+                                        "cloudwatch:EnableAlarmActions",
+                                        "cloudwatch:GetMetricStatistics",
+                                        "cloudwatch:GetMetricData",
+                                        "cloudwatch:ListMetrics",
+                                        "cloudwatch:PutMetricAlarm",
+                                        "cloudwatch:PutMetricData",
+                                        "cloudwatch:SetAlarmState",
+                                        "logs:CreateLogGroup",
+                                        "logs:Describe*",
+                                        "logs:GetLogEvents",
+                                        "logs:FilterLogEvents",
+                                        "logs:PutMetricFilter",
+                                        "logs:DeleteMetricFilter",
+                                        "logs:TestMetricFilter"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": [
+                                        "cloudtrail:*"
+                                    ],
+                                    "Resource": "arn:aws:cloudtrail:*:*:trail/test",
+                                    "Effect": "Deny"
+                                },
+                                {
+                                    "Action": [
+                                        "ec2:RunInstances"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:ec2:us-west-2:*:instance/*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Condition": {
+                                        "StringEquals": {
+                                            "ec2:InstanceType": [
+                                                "t2.micro"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "Action": [
+                                        "ec2:RunInstances"
+                                    ],
+                                    "Resource": [
+                                        "arn:aws:ec2:us-west-2::image/*",
+                                        "arn:aws:ec2:us-west-2::snapshot/*",
+                                        "arn:aws:ec2:us-west-2:*:key-pair/*",
+                                        "arn:aws:ec2:us-west-2:*:security-group/*",
+                                        "arn:aws:ec2:us-west-2:*:subnet/*",
+                                        "arn:aws:ec2:us-west-2:*:network-interface/*",
+                                        "arn:aws:ec2:us-west-2:*:volume/*",
+                                        "arn:aws:ec2:us-west-2:*:placement-group/*",
+                                        "arn:aws:ec2:us-west-2:*:vpc/*"
+                                    ],
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": [
+                                        "ec2:Describe*",
+                                        "ec2:CreateKeyPair",
+                                        "ec2:CreateSecurityGroup",
+                                        "ec2:TerminateInstances",
+                                        "ec2:StopInstances",
+                                        "ec2:StartInstances",
+                                        "ec2:AuthorizeSecurityGroupIngress",
+                                        "ec2:AuthorizeSecurityGroupEgress"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow",
+                                    "Condition": {
+                                        "StringEquals": {
+                                            "ec2:Region": "us-west-2"
+                                        }
+                                    }
+                                },
+                                {
+                                    "Action": [
+                                        "iam:ListRoles",
+                                        "iam:ListRolePolicies"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow"
+                                },
+                                {
+                                    "Action": [
+                                        "health:DescribeEventAggregates"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow",
+                                    "Sid": "HealthSid"
+                                },
+                                {
+                                    "Action": [
+                                        "cloudtrail:*"
+                                    ],
+                                    "Resource": "arn:aws:cloudtrail:*:*:trail/cloudtraillab",
+                                    "Effect": "Deny"
+                                },
+                                {
+                                    "Action": [
+                                        "sns:AddPermission",
+                                        "sns:CreateTopic",
+                                        "sns:DeleteTopic",
+                                        "sns:ListTopics",
+                                        "sns:SetTopicAttributes",
+                                        "sns:GetTopicAttributes",
+                                        "sns:Subscribe",
+                                        "sns:SetSubscriptionAttributes"
+                                    ],
+                                    "Resource": "*",
+                                    "Effect": "Allow",
+                                    "Sid": "SNSActions"
+                                },
+                                {
+                                    "Action": [
+                                        "iam:PassRole"
+                                    ],
+                                    "Resource": "arn:aws:iam::*:role/CloudTrailRole",
+                                    "Effect": "Allow",
+                                    "Sid": "PassRoleForCloudWatchPermissions"
+                                },
+                                {
+                                    "Effect": "Deny",
+                                    "Action": [
+                                        "ec2:*Host*"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "User": {
+            "Type": "AWS::IAM::User",
+            "Properties": {
+                "LoginProfile": {
+                    "Password": {
+                        "Fn::FindInMap": [
+                            "UserConfig",
+                            "Login",
+                            "Pass"
+                        ]
+                    }
+                },
+                "Path": "/",
+                "Groups": [
+                    "Students"
+                ],
+                "UserName": {
+                    "Fn::FindInMap": [
+                        "UserConfig",
+                        "Login",
+                        "Name"
+                    ]
+                }
+            }
+        }
+    }
+}
